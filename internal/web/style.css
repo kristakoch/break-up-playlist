@@ -1,0 +1,371 @@
+:root{font-family:system-ui,-apple-system,sans-serif;color:#30243e;background:#faf7fd;line-height:1.55}*{box-sizing:border-box}body{margin:0}footer{padding:1.2rem max(1rem,calc((100vw - 1100px)/2));background:#e8dcf3}main{max-width:1100px;margin:2rem auto;padding:0 1rem}footer{margin-top:3rem;font-size:.9rem}h1{line-height:1.2}a{color:#573078;text-underline-offset:.2em}a:hover{color:#35164e}section,details,article{border:1px solid #d6c7e2;border-radius:.45rem;padding:1.2rem;margin:1.2rem 0;background:#fefcff}section section,article details{background:transparent}summary{cursor:pointer;font-weight:650}form{margin:1rem 0}label{display:block;margin:.8rem 0;font-weight:600}input,textarea,select,button{font:inherit}input:not([type=checkbox]),textarea,select{display:block;width:100%;padding:.55rem;border:1px solid #a994ba;border-radius:.25rem;background:white;color:#30243e}input[type=checkbox]{width:1.1rem;height:1.1rem;vertical-align:middle}textarea{resize:vertical}button{background:#d5b9eb;border:1px solid #80609c;color:#30243e;border-radius:.25rem;padding:.55rem .9rem;cursor:pointer;margin:.25rem .4rem .25rem 0;font-weight:650}button:hover{background:#c5a3e0;color:#281936}:focus-visible{outline:3px solid #563086;outline-offset:3px}.inline{font-weight:400}.actions,.filters,.links{display:flex;gap:1rem;flex-wrap:wrap}.actions>div{flex:1;min-width:230px}.filters{align-items:end}.filters label{flex:1;min-width:160px}.filters button{margin-bottom:.8rem}.notice{padding:1rem;background:#eee2fa;border-left:4px solid #70458d}.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:.65rem;border-bottom:1px solid #e0d6e9;vertical-align:top}th{background:#eee5f5}small{display:block;color:#624578;margin-top:.25rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}.category{border-bottom:1px solid #e0d6e9;padding-bottom:1rem}p{overflow-wrap:anywhere}dt{font-weight:600}dd{margin:0 0 .6rem}caption{text-align:left;margin:.75rem 0}@media(max-width:600px){main{margin:1rem auto}section,details,article{padding:.8rem}th,td{padding:.4rem}button{min-height:44px}}
+
+/* Compact review rows while retaining accessible labels for assignment controls. */
+.song-table th,
+.song-table td {
+  padding: .3rem .45rem;
+  vertical-align: middle;
+}
+
+.assignment-form {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  margin: .15rem 0;
+}
+
+.assignment-form select {
+  width: 9rem;
+  min-width: 9rem;
+  flex: 0 0 9rem;
+  padding: .25rem;
+}
+
+.assignment-form button {
+  margin: 0;
+  padding: .25rem .5rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.assignment-cell,
+.song-title-cell {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.song-warning {
+  color: #624578;
+  white-space: nowrap;
+}
+
+@media (min-width: 900px) {
+  .song-table {
+    table-layout: fixed;
+    min-width: 850px;
+  }
+
+  .song-table th,
+  .song-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .song-table th:nth-child(1) { width: 7%; }
+  .song-table th:nth-child(2) { width: 23%; }
+  .song-table th:nth-child(3) { width: 17%; }
+  .song-table th:nth-child(4) { width: 10%; }
+  .song-table th:nth-child(5) { width: 32%; }
+  .song-table th:nth-child(6) { width: 11%; }
+
+  .song-title-cell a {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+}
+
+.work-panel h2 {
+  margin: 0 0 .5rem;
+}
+
+.work-panel .actions {
+  gap: .5rem 1.5rem;
+}
+
+.work-panel .actions > div {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.work-panel form,
+.work-panel p {
+  margin: .25rem 0;
+}
+
+.work-panel .actions form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .25rem .5rem;
+}
+
+.work-panel .actions label {
+  margin: 0;
+}
+
+.work-panel #progress {
+  margin-top: .5rem;
+}
+
+.category-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.work-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, .85fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.work-panel .work-progress #progress {
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .work-layout {
+    grid-template-columns: 1fr;
+    gap: .75rem;
+  }
+}
+
+/* Rounded, raised buttons in the app's lilac palette. */
+button {
+  display: inline-block;
+  background: #eadcf5;
+  border: 2px solid #573078;
+  border-radius: 30px;
+  box-shadow: #573078 4px 4px 0 0;
+  color: #35164e;
+  cursor: pointer;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 2.75rem;
+  padding: 0 1.125rem;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+button:hover:not(:disabled) {
+  background: #fff;
+  color: #35164e;
+}
+
+button:active:not(:disabled) {
+  box-shadow: #573078 2px 2px 0 0;
+  transform: translate(2px, 2px);
+}
+
+button:disabled {
+  background: #eee9f2;
+  border-color: #8c7d99;
+  box-shadow: #8c7d99 2px 2px 0 0;
+  color: #564a60;
+  cursor: not-allowed;
+}
+
+@media (min-width: 768px) {
+  button {
+    min-width: 120px;
+    padding: 0 1.5rem;
+  }
+}
+
+.assignment-form button {
+  min-width: 0;
+  padding: .15rem .6rem;
+  font-size: .875rem;
+  line-height: 1.4rem;
+  box-shadow: #573078 2px 2px 0 0;
+}
+
+.assignment-form button:active:not(:disabled) {
+  box-shadow: #573078 1px 1px 0 0;
+  transform: translate(1px, 1px);
+}
+
+.assignment-form button[hidden],
+.assignment-error[hidden] {
+  display: none;
+}
+
+.assignment-error {
+  color: #7b244e;
+}
+
+.playlist-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin: 1rem 0;
+}
+
+.playlist-buttons form,
+.playlist-buttons button {
+  margin: 0;
+}
+
+/* Match the outlined lilac buttons across the rest of the interface. */
+:root {
+  color: #35164e;
+  background: #f7f0fc;
+}
+
+body {
+  background: #f7f0fc;
+}
+
+main {
+  max-width: 1100px;
+}
+
+h1, h2, h3, summary, th, label {
+  color: #35164e;
+}
+
+a {
+  color: #573078;
+  font-weight: 600;
+  text-decoration-thickness: 2px;
+}
+
+a:hover {
+  color: #35164e;
+}
+
+section,
+details,
+article {
+  background: #fffafd;
+  border: 2px solid #573078;
+  border-radius: 18px;
+}
+
+section section,
+article details {
+  background: #f7f0fc;
+}
+
+summary {
+  border-radius: 8px;
+}
+
+input:not([type=checkbox]),
+textarea,
+select {
+  background: #fff;
+  border: 2px solid #80609c;
+  border-radius: 10px;
+  color: #35164e;
+}
+
+input:not([type=checkbox]):focus,
+textarea:focus,
+select:focus {
+  border-color: #573078;
+}
+
+input[type=checkbox] {
+  accent-color: #573078;
+}
+
+.notice {
+  background: #eadcf5;
+  border-left: 4px solid #573078;
+  border-radius: 10px;
+  color: #35164e;
+}
+
+table {
+  background: #fffafd;
+}
+
+th {
+  background: #eadcf5;
+}
+
+th,
+td {
+  border-bottom: 1px solid #cdb9dc;
+}
+
+.category {
+  border-bottom-color: #cdb9dc;
+}
+
+footer {
+  background: #eadcf5;
+  border-top: 2px solid #573078;
+}
+
+small,
+.song-warning {
+  color: #624578;
+}
+
+
+/* A shared indicator for background jobs and submitted forms. */
+[data-status] > p:first-child::after,
+.loading-spinner {
+  content: "";
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 3px solid #df96bd;
+  border-top-color: #7041a0;
+  border-right-color: #76b5b0;
+  border-bottom-color: #e8a65a;
+  border-radius: 50%;
+  animation: spinner-turn .8s linear infinite;
+  vertical-align: -.18rem;
+}
+
+[data-status] > p:first-child::after {
+  margin-left: .5rem;
+}
+
+.loading-spinner {
+  margin-left: .5rem;
+}
+
+@keyframes spinner-turn {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-status] > p:first-child::after,
+  .loading-spinner {
+    animation: none;
+  }
+}
+
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .1rem;
+}
+
+.export-actions form {
+  margin: .5rem 0;
+}
+
+.export-actions button {
+  margin-right: .15rem;
+}
+
+/* Work buttons show their own spinner while a collection job is active. */
+.work-panel [data-status] > p:first-child::after {
+  display: none;
+}

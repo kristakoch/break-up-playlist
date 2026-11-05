@@ -1,0 +1,26 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build the local application
+    cmds:
+      - go build -o .bin/playlistbreakup ./cmd/playlistbreakup
+  run:
+    desc: Build and start the app and local model service; Ctrl+C stops owned services
+    deps: [build]
+    cmds:
+      - ./.bin/playlistbreakup
+  setup:
+    desc: Install the pinned OpenJev runtime (requires Go and uv)
+    deps: [build]
+    cmds:
+      - ./.bin/playlistbreakup -setup
+  test:
+    desc: Run Go tests with the race detector
+    cmds:
+      - go test -race ./...
+  check:
+    desc: Run static checks and tests
+    cmds:
+      - go vet ./...
+      - task test

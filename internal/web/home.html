@@ -1,0 +1,69 @@
+{{define "home"}}
+  {{template "top" .}}
+  <h1>
+    Your collections
+  </h1>
+  <p>
+    Break a playlist into categories you define. Review every choice before creating new playlists.
+  </p>
+  <section>
+    <h2>
+      TIDAL
+    </h2>
+    {{if .Connected}}
+      <p>
+        Account connected.
+      </p>
+      <a href="/?browse=1">
+        Browse owned playlists
+      </a>
+    {{else}}
+      <p>
+        Connect your account to import playlists. The original playlist is never changed.
+      </p>
+    {{end}}
+    <form method="post" action="/connect">
+      {{template "csrf" .}}
+      <button>
+        {{if .Connected}}
+          Reconnect TIDAL
+        {{else}}
+          Connect TIDAL
+        {{end}}
+      </button>
+    </form>
+    {{if .Playlists}}
+      <div class="playlist-buttons">
+        {{range .Playlists}}
+          <form method="post" action="/import">
+            {{template "csrf" $}}
+            <input type="hidden" name="playlist" value="{{.ID}}">
+            <button>
+              Import {{.Name}}
+            </button>
+          </form>
+        {{end}}
+      </div>
+    {{end}}
+  </section>
+  <section>
+    <h2>
+      Saved collections
+    </h2>
+    {{range .Collections}}
+      <p>
+        <a href="/collections/{{.ID}}">
+          {{.Name}}
+        </a>
+        ·
+        {{len .Songs}}
+        songs
+      </p>
+    {{else}}
+      <p>
+        No collections yet.
+      </p>
+    {{end}}
+  </section>
+  {{template "bottom" .}}
+{{end}}

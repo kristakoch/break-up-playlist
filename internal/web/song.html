@@ -1,0 +1,137 @@
+{{define "song"}}
+  {{template "top" .}}
+  <nav>
+    <a href="/collections/{{.Collection.ID}}{{if .Blind}}?view=blind{{end}}">
+      Back to collection
+    </a>
+  </nav>
+  <h1>
+    {{.Song.DisplayTitle}}
+  </h1>
+  <p>
+    {{.Song.Artist}}
+    ·
+    {{.Song.Album}}
+    · Track ID
+    {{.Song.ID}}
+  </p>
+  <p>
+    {{.MissingEvidence}} {{if eq .MissingEvidence 1}}song still needs{{else}}songs still need{{end}} lyrics or a description{{if not .Song.Eligible}}, including this song{{end}}.
+  </p>
+  {{if .Song.Incomplete}}
+    <p class="notice">
+      Imported catalog metadata is incomplete. Missing fields have not been inferred.
+    </p>
+  {{end}}
+  <p>
+    Lyrics:
+    {{.Song.LyricStatus}}
+    {{if .Song.LyricSource}}
+      · Source:
+      {{if or (eq .Song.LyricSource "Manual entry") (eq .Song.LyricSource "TIDAL") (eq .Song.LyricSource "Lyrics.ovh")}}
+        {{.Song.LyricSource}}
+      {{else}}
+        <a href="{{.Song.LyricSource}}">
+          LRCLIB record
+        </a>
+      {{end}}
+    {{end}}
+  </p>
+  {{if not .Song.Eligible}}
+    <p>
+      <a href="https://www.google.com/search?q={{.Song.Title}}%20by%20{{.Song.Artist}}%20lyrics" target="_blank" rel="noopener noreferrer">Search for lyrics <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+      ·
+      <a href="https://www.google.com/search?q={{.Song.Title}}%20by%20{{.Song.Artist}}%20song%20description" target="_blank" rel="noopener noreferrer">Search for a description <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+    </p>
+  {{end}}
+  <form method="post" action="/collections/{{.Collection.ID}}/songs/{{.Song.ID}}">
+    {{template "csrf" .}}
+    {{if .Blind}}
+      <input type="hidden" name="blind" value="1">
+    {{end}}
+    <label>
+      Description / evidence
+      <textarea name="description" rows="6">{{.Song.Description}}</textarea>
+    </label>
+    <label>
+      Lyrics
+      <textarea name="lyrics" rows="15">{{.Song.Lyrics}}</textarea>
+    </label>
+    {{if .Blind}}
+      <input type="hidden" name="manual" value="{{.Song.Manual}}">
+      <p>
+        Predictions and assignments are hidden while you label independently.
+      </p>
+    {{else}}
+      <label>
+        Assignment
+        <select name="manual">
+          <option value="">
+            Use automatic result
+          </option>
+          {{range .Collection.Categories}}
+            <option value="{{.ID}}" {{if eqs $.Song.Manual .ID}}selected{{end}}>
+              {{.Name}}
+            </option>
+          {{end}}
+        </select>
+      </label>
+    {{end}}
+    <input type="hidden" name="reference" value="{{.Song.Reference}}">
+    <button>
+      Save song
+    </button>
+    <button type="submit" name="next" value="1">
+      Save and go to next song needing evidence
+    </button>
+  </form>
+  {{if not .Blind}}
+    {{if .Song.Prediction}}
+      <section>
+        <h2>
+          Model prediction
+        </h2>
+        <p>
+          {{name .Collection .Song.Prediction.Category}}
+          ·
+          {{pct .Song.Score}}
+        </p>
+        {{if .Song.Prediction.Review}}
+          <p>
+            Review required: category definitions changed.
+          </p>
+        {{end}}
+        <dl>
+          {{range $id,$p := .Song.Prediction.Probabilities}}
+            <dt>
+              {{name $.Collection $id}}
+            </dt>
+            <dd>
+              {{pct $p}}
+            </dd>
+          {{end}}
+        </dl>
+        <p>
+          Model:
+          {{.Song.Prediction.Model}}
+        </p>
+        <p>
+          Instructions:
+          {{.Song.Prediction.Version}}
+        </p>
+      </section>
+    {{end}}
+    {{if .Song.Error}}
+      <p role="alert">
+        {{.Song.Error}}
+      </p>
+    {{end}}
+  {{end}}
+  <details>
+    <summary>
+      All available catalog metadata
+    </summary>
+    <pre>{{json .Song.Metadata}}</pre>
+  </details>
+  {{template "bottom" .}}
+{{end}}

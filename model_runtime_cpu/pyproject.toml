@@ -1,0 +1,8 @@
+[project]
+name = "playlist-breakup-cpu-model-runtime"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["openjev[laya]"]
+
+[tool.uv.sources]
+openjev = { git = "https://github.com/razorback16/openjev.git", rev = "b4339c640f5331ef75098637d1be2c787715ee88" }

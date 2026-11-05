@@ -1,0 +1,393 @@
+{{define "collection"}}
+  {{template "top" .}}
+  <nav>
+    <a href="/">
+      Collections
+    </a>
+  </nav>
+  <h1>
+    {{.Collection.Name}}
+  </h1>
+  <p><a href="#delete-collection">Delete this collection</a></p>
+  {{if not .Collection.SourceID}}
+    <p class="notice">
+      Local-only collection · cannot export to TIDAL.
+    </p>
+  {{end}}
+  <p>
+    <span data-count="Total">{{len .Collection.Songs}}</span>
+    songs ·
+    <span data-count="Assigned">{{.Assigned}}</span>
+    assigned ·
+    <span data-count="Ready">{{.Ready}}</span>
+    ready to classify ·
+    <span data-count="Needs">{{.Needs}}</span>
+    need evidence or catalog metadata
+  </p>
+  {{if .Collection.SourceID}}
+    <form method="get" action="/collections/{{.Collection.ID}}/export">
+      <span data-create-playlists-help {{if or (eq (len .Collection.Songs) 0) (gt .MissingEvidence 0)}}title="{{if eq (len .Collection.Songs) 0}}Add songs before creating playlists.{{else}}Every song needs lyrics or a description before playlists can be created.{{end}}"{{end}}>
+        <button data-create-playlists aria-describedby="evidence-status" {{if or (eq (len .Collection.Songs) 0) (gt .MissingEvidence 0)}}disabled{{end}}>Create TIDAL playlists</button>
+      </span>
+    </form>
+    <p>Review a preview before creating playlists. Songs awaiting assignment: <span data-count="Unassigned">{{.Unassigned}}</span>.</p>
+  {{end}}
+  <p id="evidence-status"><span data-count="MissingEvidence">{{.MissingEvidence}}</span> songs need lyrics or a description · <span data-count="MissingCatalog">{{.MissingCatalog}}</span> songs have incomplete catalog metadata. A song can be in both counts.</p>
+  <section class="work-panel">
+    <h2>
+      Work through the collection
+    </h2>
+    <div class="work-layout">
+      <div class="work-controls">
+    <div class="actions">
+      <div>
+        <form method="post" action="/collections/{{.Collection.ID}}/lyrics">
+          {{template "csrf" .}}
+          <button {{if and (active .Job) (eq .Job.Kind "lyrics")}}disabled{{end}}>
+            {{if and (active .Job) (eq .Job.Kind "lyrics")}}
+              Fetching lyrics… <span class="loading-spinner" aria-hidden="true"></span>
+            {{else}}
+              Fetch lyrics
+            {{end}}
+          </button>
+        </form>
+        <p>
+          <span data-count="Lyrics">{{.Lyrics}}</span>
+          of
+          <span data-count="Total">{{len .Collection.Songs}}</span>
+          songs have lyrics
+        </p>
+      </div>
+      <div>
+        <form method="post" action="/collections/{{.Collection.ID}}/classify">
+          {{template "csrf" .}}
+          <span {{if lt (len .Collection.Categories) 2}}title="Add at least two categories to classify songs."{{end}}>
+          <button type="submit" {{if gt .Predictions 0}}name="remaining" value="1"{{end}} {{if lt (len .Collection.Categories) 2}}aria-describedby="category-requirement"{{end}} {{if or (lt (len .Collection.Categories) 2) (and (active .Job) (or (eq .Job.Kind "classification") (eq .Job.Kind "lyrics")))}}disabled{{end}}>
+            {{if and (active .Job) (eq .Job.Kind "classification")}}
+              Classifying songs… <span class="loading-spinner" aria-hidden="true"></span>
+            {{else if gt .Predictions 0}}
+              Classify remaining
+            {{else}}
+              Classify songs
+            {{end}}
+          </button>
+          </span>
+          {{if gt .Predictions 0}}<span {{if lt (len .Collection.Categories) 2}}title="Add at least two categories to classify songs."{{end}}><button type="submit" name="bypass" value="1" {{if lt (len .Collection.Categories) 2}}aria-describedby="category-requirement"{{end}} {{if or (lt (len .Collection.Categories) 2) (and (active .Job) (or (eq .Job.Kind "classification") (eq .Job.Kind "lyrics")))}}disabled{{end}}>
+            Reclassify All
+          </button></span>{{end}}
+        </form>
+        {{if lt (len .Collection.Categories) 2}}<p id="category-requirement">Add at least two categories to classify songs.</p>{{end}}
+        <p>
+          <span data-count="Predictions">{{.Predictions}}</span>
+          saved classifications
+        </p>
+      </div>
+    </div>
+      </div>
+      <div class="work-progress">
+    {{if active .Job}}
+      <form method="post" action="/collections/{{.Collection.ID}}/stop">
+        {{template "csrf" .}}
+        <button>
+          Stop {{if eq .Job.Kind "lyrics"}}lyrics lookup{{else}}{{.Job.Kind}}{{end}}
+        </button>
+      </form>
+    {{end}}
+    <div id="progress" {{if active .Job}}data-status="/collections/{{.Collection.ID}}/status"{{end}} role="status">
+      <p>{{if eq .Job.Kind "lyrics"}}Lyrics lookup{{else}}{{.Job.Kind}}{{end}} {{.Job.State}}</p>
+      {{if .Job.Message}}<p>{{.Job.Message}}</p>{{end}}
+      <p>
+        {{.Job.Processed}}
+        processed /
+        {{.Job.Total}}
+        total ·
+        {{remaining .Job}}
+        remaining ·
+        {{.Job.Cached}}
+        cached ·
+        {{.Job.Failed}}
+        failed
+      </p>
+    </div>
+      </div>
+    </div>
+  </section>
+  <section>
+    <h2>Categories</h2>
+    {{if .Collection.Categories}}
+      <ul class="category-counts">
+        {{range .Collection.Categories}}
+          <li>{{.Name}} (<span data-category-count="{{.ID}}">{{index $.CategoryCounts .ID}}</span>)</li>
+        {{end}}
+      </ul>
+    {{else}}
+      <p>No categories yet.</p>
+    {{end}}
+  <details>
+    <summary>
+      Edit categories (
+      {{len .Collection.Categories}}
+      / 20)
+    </summary>
+    <p>
+      Define any criteria: themes, instruments, genre, mood, or something else. Changing definitions marks existing predictions for review.
+    </p>
+    {{range .Collection.Categories}}
+      <form method="post" action="/collections/{{$.Collection.ID}}/category" class="category">
+        {{template "csrf" $}}
+        <input type="hidden" name="id" value="{{.ID}}">
+        <p><span data-category-count="{{.ID}}">{{index $.CategoryCounts .ID}}</span> songs assigned</p>
+        <label>
+          Name
+          <input name="name" value="{{.Name}}" required>
+        </label>
+        <label>
+          Description
+          <textarea name="description" required>{{.Description}}</textarea>
+        </label>
+        <button>
+          Save category
+        </button>
+        <button name="remove" value="1">
+          Remove category
+        </button>
+      </form>
+    {{end}}
+    <form method="post" action="/collections/{{.Collection.ID}}/category">
+      {{template "csrf" .}}
+      <h3>
+        Add category
+      </h3>
+      <label>
+        Name
+        <input name="name" required>
+      </label>
+      <label>
+        Description
+        <textarea name="description" required></textarea>
+      </label>
+      <button>
+        Add category
+      </button>
+    </form>
+  </details>
+  </section>
+  <section>
+    <h2 id="review-songs">
+      Review songs
+    </h2>
+    <nav class="links">
+      <a href="/collections/{{.Collection.ID}}">
+        All songs (<span data-count="Total">{{len .Collection.Songs}}</span>)
+      </a>
+      <a href="?view=ready">
+        Ready to classify (<span data-count="Ready">{{.Ready}}</span>)
+      </a>
+      <a href="?view=needs">
+        Needs evidence or catalog metadata (<span data-count="Needs">{{.Needs}}</span>)
+      </a>
+    </nav>
+    <form method="get" class="filters">
+      <input type="hidden" name="view" value="{{.View}}">
+      <label>
+        Search title or artist
+        <input name="q" value="{{.Query}}">
+      </label>
+      {{if not .Blind}}
+        <label>
+          Category
+          <select name="category">
+            <option value="">
+              All categories
+            </option>
+            {{range .Collection.Categories}}
+              <option value="{{.ID}}" {{if eqs $.Filter .ID}}selected{{end}}>
+                {{.Name}}
+              </option>
+            {{end}}
+          </select>
+        </label>
+        <label>
+          Sort
+          <select name="sort">
+            <option value="order">
+              Playlist order
+            </option>
+            <option value="title" {{if eq .Sort "title"}}selected{{end}}>
+              Title
+            </option>
+            <option value="score" {{if eq .Sort "score"}}selected{{end}}>
+              Lowest model score
+            </option>
+          </select>
+        </label>
+      {{end}}
+      <button>
+        Apply
+      </button>
+    </form>
+    {{range .Groups}}
+      <h3 id="{{.Anchor}}">
+        {{.Name}}
+        ·
+        {{if .LiveCount}}
+          {{if .CategoryID}}<span data-category-count="{{.CategoryID}}">{{.Total}}</span>{{else}}<span data-count="Ready">{{.Total}}</span>{{end}}
+        {{else}}
+          {{.Total}}
+        {{end}}
+      </h3>
+      <div class="table-scroll">
+        <table class="song-table">
+          <thead>
+            <tr>
+              <th>
+                Position
+              </th>
+              <th>
+                Song
+              </th>
+              <th>
+                Artist
+              </th>
+              <th>
+                Lyrics
+              </th>
+              {{if not $.Blind}}
+                <th>
+                  Assignment
+                </th>
+                <th>
+                  Model score
+                </th>
+              {{end}}
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Songs}}
+              <tr>
+                <td>
+                  {{.Position}}
+                </td>
+                <td>
+                  <div class="song-title-cell">
+                  <a title="{{.DisplayTitle}}" href="/collections/{{$.Collection.ID}}/songs/{{.ID}}{{if $.Blind}}?blind=1{{end}}">
+                    {{.DisplayTitle}}
+                  </a>
+                  {{if .Incomplete}}
+                    <span class="song-warning" title="Incomplete catalog metadata" aria-label="Incomplete catalog metadata">⚠</span>
+                  {{end}}
+                  {{if not .Eligible}}
+                    <span class="song-warning" title="Needs lyrics or a description" aria-label="Needs lyrics or a description">⚠</span>
+                  {{end}}
+                  {{if not $.Blind}}
+                    {{if .Error}}
+                      <span class="song-warning" role="status" title="{{.Error}}" aria-label="Classification error: {{.Error}}">⚠ Error</span>
+                    {{end}}
+                  {{end}}
+                  </div>
+                </td>
+                <td title="{{.Artist}}">
+                  {{.Artist}}
+                </td>
+                <td>
+                  {{.LyricStatus}}
+                </td>
+                {{if not $.Blind}}
+                  <td>
+                    <div class="assignment-cell">
+                    <form class="assignment-form" method="post" action="/collections/{{$.Collection.ID}}/assign">
+                      {{template "csrf" $}}
+                      <input type="hidden" name="song" value="{{.ID}}">
+                      <label class="sr-only" for="assignment-{{.ID}}">Assignment for {{.DisplayTitle}}</label>
+                        <select id="assignment-{{.ID}}" name="manual">
+                          <option value="">
+                            {{if .Prediction}}{{name $.Collection .Prediction.Category}} (model){{else}}Unassigned{{end}}
+                          </option>
+                          {{$song := .}}
+                          {{range $.Collection.Categories}}
+                            <option value="{{.ID}}" {{if eqs $song.Manual .ID}}selected{{end}}>
+                              {{.Name}}
+                            </option>
+                          {{end}}
+                        </select>
+                      <button>
+                        Assign
+                      </button>
+                      <span class="assignment-error" data-assignment-error role="alert" hidden></span>
+                    </form>
+                    {{if .Prediction}}
+                      {{if .Prediction.Review}}
+                        <span class="song-warning" title="Review required: category definitions changed" aria-label="Review required: category definitions changed">⚠</span>
+                      {{end}}
+                    {{end}}
+                    </div>
+                  </td>
+                  <td>
+                    {{pct .Score}}
+                    {{if warning .}}
+                      <span title="Model score below 30%" aria-label="Warning: model score below 30 percent">
+                        ⚠
+                      </span>
+                    {{end}}
+                  </td>
+                {{end}}
+              </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+      {{if .NextURL}}<a href="{{.NextURL}}">Show 10 more songs</a>{{end}}
+      {{if .ResetURL}}<a href="{{.ResetURL}}">Show fewer songs</a>{{end}}
+    {{else}}
+      <p>
+        No songs match this view.
+      </p>
+    {{end}}
+    <p>
+      Model scores are relative probabilities among your categories and do not guarantee accuracy.
+    </p>
+  </section>
+  <details>
+    <summary>
+      Collection maintenance
+    </summary>
+    {{if .Collection.SourceID}}
+      <form method="post" action="/collections/{{.Collection.ID}}/reimport">
+        {{template "csrf" .}}
+        <button>
+          Reimport source playlist
+        </button>
+      </form>
+    {{end}}
+    <form method="post" action="/collections/{{.Collection.ID}}/reset">
+      {{template "csrf" .}}
+      <h3>
+        Reset categorizations
+      </h3>
+      <label class="inline">
+        <input type="checkbox" name="confirm" value="yes" required>
+        Clear saved predictions and errors; preserve evidence.
+      </label>
+      <label class="inline">
+        <input type="checkbox" name="manual" value="1">
+        Also clear manual assignments
+      </label>
+      <button>
+        Reset categorizations
+      </button>
+    </form>
+  </details>
+  <section id="delete-collection">
+    <h2>Delete collection</h2>
+    <p>This permanently deletes the local collection, including its evidence, results, and export recovery state. Your TIDAL playlists are not changed. Stop any active job first.</p>
+    <form method="post" action="/collections/{{.Collection.ID}}/delete">
+      {{template "csrf" .}}
+      <label class="inline">
+        <input type="checkbox" name="confirm" value="yes" required>
+        I want to delete this local collection.
+      </label>
+      <button>Delete collection</button>
+    </form>
+  </section>
+  {{template "bottom" .}}
+{{end}}

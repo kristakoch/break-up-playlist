@@ -1,0 +1,108 @@
+{{define "export"}}
+  {{template "top" .}}
+  <nav><a href="/collections/{{.Collection.ID}}">Back to collection</a></nav>
+  <h1>Create TIDAL playlists</h1>
+  <p>From {{.Collection.Name}}. Your original playlist will not be changed. New playlists are unlisted.</p>
+
+  {{if and (eq .Job.Kind "export") (or (active .Job) .ActiveExport)}}
+    <div id="progress" {{if active .Job}}data-status="/collections/{{.Collection.ID}}/status"{{end}} role="status">
+      <p>Export {{.Job.State}} · {{.Job.Message}}</p>
+      <p>{{.Job.Processed}} of {{.Job.Total}} playlists processed</p>
+    </div>
+  {{end}}
+
+  {{if .ActiveExport}}
+    <section>
+      <h2>Export in progress</h2>
+      {{if .ActiveExport.Error}}<p class="notice" role="alert">{{.ActiveExport.Error}}</p>{{end}}
+      {{if .ActiveExport.Unavailable}}
+        <p>TIDAL could not add these tracks. Resume to continue without them:</p>
+        <ul>{{range .ActiveExport.Unavailable}}<li>{{.Title}} · {{.Artist}}</li>{{end}}</ul>
+      {{end}}
+      {{if .ActiveExport.Omitted}}
+        <p>Tracks TIDAL could not add:</p>
+        <ul>{{range .ActiveExport.Omitted}}<li>{{.Title}} · {{.Artist}}</li>{{end}}</ul>
+      {{end}}
+      {{range .ActiveExport.Playlists}}
+        {{if .Destination}}<p><a href="https://tidal.com/browse/playlist/{{.Destination}}">Open {{.Name}} on TIDAL</a></p>{{end}}
+      {{end}}
+      {{if not (active .Job)}}
+        <form method="post" action="/collections/{{.Collection.ID}}/resume">
+          {{template "csrf" .}}
+          <button>Resume export</button>
+        </form>
+      {{end}}
+    </section>
+  {{else}}
+    <section>
+      {{if .Preview}}
+        <h2>Current preview</h2>
+        <p>These playlists haven’t been created yet. Review them, then choose Create playlists.</p>
+        {{range .Preview.Playlists}}
+          <details>
+            <summary>{{.Name}} · {{len .Tracks}} songs</summary>
+            <ol>{{range .Tracks}}<li>{{.Title}} · {{.Artist}}</li>{{end}}</ol>
+          </details>
+        {{end}}
+        <div class="export-actions">
+        {{if ne .Preview.Revision .Collection.Revision}}
+          <p class="notice">The collection changed after this preview was generated. Update the preview before creating playlists.</p>
+        {{else}}
+          {{if not .CanWrite}}
+            <p>Allow TIDAL playlist access before creating playlists.</p>
+            <form method="post" action="/connect">
+              {{template "csrf" .}}
+              <input type="hidden" name="write" value="1">
+              <input type="hidden" name="collection" value="{{.Collection.ID}}">
+              <button>Allow TIDAL playlist access</button>
+            </form>
+          {{else}}
+            <form method="post" action="/collections/{{.Collection.ID}}/confirm">
+              {{template "csrf" .}}
+              <input type="hidden" name="export" value="{{.Preview.ID}}">
+              <label class="inline"><input type="checkbox" name="confirm" value="yes" required> I reviewed these playlists and want to create them.</label>
+              <button>Create playlists</button>
+            </form>
+          {{end}}
+        {{end}}
+        <form method="post" action="/collections/{{.Collection.ID}}/preview">
+          {{template "csrf" .}}
+          <button title="Updating replaces this preview with your current assignments. It won’t change playlists already created.">Update preview</button>
+        </form>
+        </div>
+      {{else}}
+        <h2>Start a new export</h2>
+        <p>Generate a preview to see the songs in each playlist before creating them on TIDAL.</p>
+        <form method="post" action="/collections/{{.Collection.ID}}/preview">
+          {{template "csrf" .}}
+          <button>Generate playlist preview</button>
+        </form>
+      {{end}}
+    </section>
+  {{end}}
+
+  {{if .PreviousExports}}
+    <details>
+      <summary>Previous exports ({{len .PreviousExports}})</summary>
+      {{range .PreviousExports}}
+        <article>
+          <h3>Created playlists</h3>
+          {{range .Playlists}}
+            {{if .Destination}}<p><a href="https://tidal.com/browse/playlist/{{.Destination}}">Open {{.Name}} on TIDAL</a></p>{{end}}
+          {{end}}
+          {{if .Omitted}}
+            <p>Tracks TIDAL could not add:</p>
+            <ul>{{range .Omitted}}<li>{{.Title}} · {{.Artist}}</li>{{end}}</ul>
+          {{end}}
+          <form method="post" action="/collections/{{$.Collection.ID}}/remove-export">
+            {{template "csrf" $}}
+            <input type="hidden" name="export" value="{{.ID}}">
+            <label class="inline"><input type="checkbox" name="confirm" value="yes" required> Remove this record from history. TIDAL playlists will not be deleted.</label>
+            <button>Remove from history</button>
+          </form>
+        </article>
+      {{end}}
+    </details>
+  {{end}}
+  {{template "bottom" .}}
+{{end}}

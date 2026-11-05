@@ -31,3 +31,23 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Local application state, session credentials, and compiled executable
+.data/
+.bin/
+*.db
+*.db-shm
+*.db-wal
+.env.*
+!.env.example
+.tools/
+
+# Python runtime environments, caches, and generated dependency locks
+uv.lock
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
