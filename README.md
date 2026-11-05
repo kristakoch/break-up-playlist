@@ -4,7 +4,7 @@
 
 A local Go web application for splitting TIDAL playlists into categories you define. I built it because I wanted to test out Jev, or in this case, OpenJev. 
 
-I also wanted to try out the pattern where you create a demo app using an agent, test things out, develop your idea about how the solution should work, and then rebuild it simpler. This is the second version of the app (with much less React since I don't know it 😉).
+I also wanted to try out the pattern where you create a demo app using an agent, test things out, develop your idea about how the solution should work, and then rebuild it simpler. This is the second version of the app (with ~~much less~~ no React since I don't know it 😉).
 
 ## Run
 
